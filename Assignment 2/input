@@ -1,0 +1,8 @@
+insert, x, ID, 2, 1, 5, 0x6dfed4
+show, 
+insert, x, ID, 2, 1, 5, 0x6dfed4
+show, 
+insert, y, ID4, 2, 3, 6, 0x6dfe23
+show, 
+update, y, ID26, 19, 20, 1, 0x6622
+show
