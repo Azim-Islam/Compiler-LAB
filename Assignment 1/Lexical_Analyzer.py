@@ -22,7 +22,7 @@ def tokenize(word, d):
         d['Functions'].add(m.group('func'))
 
     #Atomic Variable Declaration Indentifier
-    #a;|a,
+    #a;|a,d
     p = r"(?P<variable>([_]|[a-z]|[A-Z])(([_]|[a-z]|[A-Z]|[0-9])*))(?P<punc>[,|;])?"
     m = re.match(p, word)
     if m:
