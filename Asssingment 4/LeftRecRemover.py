@@ -1,25 +1,27 @@
 from collections import defaultdict
 import re
 
+#Checks if a production rule has left recursion
+#By checking the symbols of production rules using regular expression.
 def checkLeftRec(p_rules, sym):
     for rule in p_rules[sym]:
         if re.search("^"+sym, rule):
             return True
     return False
 
-
+#The inputs are read from 'input' file in the root directory of the program.
 f = open('input', 'r')
-p_rules = defaultdict(list)
+p_rules = defaultdict(list) #This dictionary contains the production rules as in ['P'] -> ['Y', 'Z', 'e']
 
 #input from 'input file'
 for line in f:
     if line.strip():
         t1 = line.strip().split("->")
-        left = t1[0]
-        production = t1[1]
+        left = t1[0] #The left symbol
+        production = t1[1] #The production rules associated with ...
         p_rules[left] += production.split("|")
 
-symbol = list(p_rules.keys())
+symbol = list(p_rules.keys()) #The 'producing' symbols are read. ie the symbols which have production (left symbols).
 for i in range(0, len(symbol)):
     new_rules = []
     for j in range(0, i):
