@@ -23,12 +23,12 @@ for line in f:
 
 symbol = list(p_rules.keys()) #The 'producing' symbols are read. ie the symbols which have production (left symbols).
 for i in range(0, len(symbol)):
-    new_rules = []
     for j in range(0, i):
-        phis = [] 
-        alphas = []
+        new_rules = []
         betas = p_rules[symbol[j]]
         for symbols_ in p_rules[symbol[i]]:
+            alphas = []
+            phis = [] 
             #if such rule Ai -> Aja + phi
             s = re.search("^"+symbol[j], symbols_)
             if s:
@@ -37,14 +37,14 @@ for i in range(0, len(symbol)):
                 alpha = alphas.append(symbols_[s.end():])
             else:
                 phis.append(symbols_)
-        if alphas:
-            for alpha in alphas:
-                for beta in betas:
-                    new_rules.append(beta+alpha)
-        new_rules += phis
-    if new_rules:
-        p_rules[symbol[i]] = new_rules
-            
+            if alphas:
+                for alpha in alphas:
+                    for beta in betas:
+                        new_rules.append(beta+alpha)
+            new_rules += phis
+            if new_rules:
+                p_rules[symbol[i]] = new_rules
+
     #Left recursion removal of Ai
     if checkLeftRec(p_rules, symbol[i]):
         alphas = []
