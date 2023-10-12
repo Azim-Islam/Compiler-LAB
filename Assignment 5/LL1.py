@@ -1,6 +1,7 @@
 from collections import defaultdict
 import re
-
+import sys
+# sys.setrecursionlimit(10**9) 
 
 ######################################################################
 ################ LEFT RECURSION REMOVE START #########################
@@ -23,7 +24,7 @@ for line in f:
         left = t1[0] #The left symbol
         production = t1[1] #The production rules associated with ...
         p_rules[left] += production.split("|")
-
+print(p_rules)
 symbol = list(p_rules.keys()) #The 'producing' symbols are read. ie the symbols which have production (left symbols).
 for i in range(0, len(symbol)):
     for j in range(0, i):
@@ -107,10 +108,17 @@ def generate_terminal_non_terminals(p_rules):
             extract_terms(r[:])
 
 def get_nt(rule):
+    for nt in sym_n_terms:
+        s = re.search("^"+nt, rule)
+        if s:
+            return rule[:s.end()]
+    return None 
+
+def get_t(rule):
     for t in sym_terms:
         s = re.search("^"+t, rule)
         if s:
-            return rule[:s.end()]
+            return (rule[:s.end()], s)
     return None
 generate_terminal_non_terminals(p_rules)
 
@@ -120,37 +128,43 @@ print(sym_n_terms)
 # Implementation of FIRST
 def FIRST(nt_sym, rules):
     for rule in rules:
-        _nt_ = get_nt(rule)
-        print(_nt_, rule)
-        rule = rule[:]
+        nt = get_nt(rule)
+        if nt:
+            FIRST_T[nt_sym].add(nt)
         temp = set()
-        while _nt_:
-            FIRST(_nt_, p_rules[_nt_])
-            # print(nt_sym, _nt_, FIRST_T[nt_sym], FIRST_T[_nt_])
-            # FIRST_T[nt_sym] = FIRST_T[nt_sym].union(FIRST_T[_nt_])
-            temp = temp.union(FIRST_T[_nt_])
-            if len(temp) == 1 and 'ε' in temp:
-                for t in sym_terms:
-                    s = re.search("^"+t, rule)
-                    if s:
-                        # print(r[:s.end()])
-                        _nt_ = rule[:s.end()]
-                        rule = rule[s.end():]
+        while not nt:
+            t = get_t(rule)
+            if t:
+                t, s = t[0], t[1]
+                FIRST(t, p_rules)
+                temp = temp.union(FIRST_T[t])
+                if len(temp) == 1 and 'ε' in temp:
+                    rule = rule[s.end():]
+                    print(rule)
+                    if not rule:
+                        FIRST_T[nt_sym].add('ε')
                         break
+                elif len(temp) > 1:
+                    temp.remove('ε')
+                    FIRST_T[nt_sym] = FIRST_T[nt_sym].union(temp)
+                    break
             else:
-                _nt_ = None
-        if not get_nt(rule):
-            FIRST_T[nt_sym].add(rule[0])
-        else:
-            FIRST_T[nt_sym] = FIRST_T[nt_sym].union(temp)
-
-for nt_sym in p_rules:
-    FIRST(nt_sym, p_rules[nt_sym])
+                nt = get_nt(rule)
+                if nt:
+                    FIRST_T[nt_sym].add(nt)
+                else:
+                    FIRST_T[nt_sym].add('ε')
+                    break
 
 
-#printing FIRST
-for s in p_rules:
-    print(f"FIRST {s} = {sorted(FIRST_T[s])}")
+                
+# for nt_sym in p_rules:
+#     FIRST(nt_sym, p_rules[nt_sym])
+
+
+# #printing FIRST
+# for s in p_rules:
+#     print(f"FIRST {s} = {sorted(FIRST_T[s])}")
 
 
 
