@@ -1,5 +1,6 @@
-E->TE’
-E’->+TE’|ε
-T->FT’
-T’->*FT’|ε
-F->(E)|i
+S->aBDh
+B->cC
+C->bC|ε
+D->EF
+E->g|ε
+F->f|ε
