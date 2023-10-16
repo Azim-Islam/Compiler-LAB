@@ -105,17 +105,35 @@ def generate_terminal_non_terminals(p_rules):
         for r in p_rules[s]:
             extract_terms(r[:])
 
+def check_valid(rule):
+    if not rule:
+        return True
+    for nt in sym_n_terms:
+        p = "".join([f"[{c}]" for c in nt])
+        s = re.search(fr"^{p}", rule)
+        if s:
+            return True
+    for t in sym_terms:
+        p = "".join([f"[{c}]" for c in t])
+        s = re.search(fr"^{p}", rule)
+        if s:
+            return True
+    return False
+
 def get_nt(rule):
     for nt in sym_n_terms:
-        s = re.search(fr"^[{nt}]", rule)
-        if s:
+        p = "".join([f"[{c}]" for c in nt])
+        s = re.search(fr"^{p}", rule)
+        if s and check_valid(rule[s.end():]):
             return rule[:s.end()]
+            
     return None 
 
 def get_t(rule):
     for t in sym_terms:
-        s = re.search(fr"^[{t}]", rule)
-        if s:
+        p = "".join([f"[{c}]" for c in t])
+        s = re.search(fr"^{p}", rule)
+        if s and check_valid(rule[s.end():]):
             return (rule[:s.end()], s)
     return None
 
@@ -175,8 +193,8 @@ def FOLLOW(nt_sym):
     for sym in p_rules:
         for rule in p_rules[sym]:
             s = re.search(nt_sym, rule)
-            if s:
-                print(nt_sym, rule)
+            if s and check_valid(rule[s.end():]):
+                # print(nt_sym, sym, rule)
                 rule = rule[s.end():]
                 if rule:
                     nt = get_nt(rule)
