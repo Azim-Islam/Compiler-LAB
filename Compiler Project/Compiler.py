@@ -124,6 +124,70 @@ def gen_tac(string):
     
     return string
 
+
+def gen_assembly(table, out):
+    stack = deque()
+    visited = set()
+    tac_lines = deque()
+    for c in out:
+        if c in table:
+            stack.append(c)
+            visited.add(c)
+
+    while stack:
+        v = stack.popleft()
+        tac_lines.appendleft([v, table[v]])
+        for c in table[v]:
+            if c in table and c not in visited:
+                stack.append(c)
+                visited.add(c)
+
+    tac_lines.append([out[0], out[2:]])
+    # ".DATA\n.CODE\nMAIN PROC\n\nMOV AX, @DATA      ; Point AX to the data segment\nMOV DS, AX"
+    # print(tac_lines)
+    data_section = set([])
+    code_section = [".CODE\nMAIN PROC\n    MOV AX, @DATA      ; Point AX to the data segment\n    MOV DS, AX"]
+
+    for line in tac_lines:
+        data_section.add(" "*4 + f"{line[0]} DW ?';")
+
+        if "*" in line[1]: #OP3 = OP1 * OP2
+            data_section.add(" "*4 + f"{line[1][0]} DW ?' ;")
+            data_section.add(" "*4 + f"{line[1][2]} DW ?' ;")
+            code_section.append(" "*4 + f"MOV AX, {line[1][0]} ; MOVING OP1 INTO AX")
+            code_section.append(" "*4 + f"MUL {line[1][2]} ; MULTIPLYING")
+            code_section.append(" "*4 + f"MOV {line[0]}, AX ; EQUALS TO = AX")
+
+        if "+" in line[1]: #OP3 = OP1 + OP2
+            data_section.add(" "*4 + f"{line[1][0]} DW ?' ;")
+            data_section.add(" "*4 + f"{line[1][2]} DW ?' ;")
+            code_section.append(" "*4 + f"MOV AX, {line[1][0]} ; MOVING OP1 INTO AX")
+            code_section.append(" "*4 + f"ADD AX, {line[1][2]} ; Adding OP2 TO AX")
+            code_section.append(" "*4 + f"MOV {line[0]}, AX ; OP3 EQUALS TO = AX")
+            
+        if "-" in line[1]: #OP3 = OP1 - OP2
+            data_section.add(" "*4 + f"{line[1][0]} DW ?' ;")
+            data_section.add(" "*4 + f"{line[1][2]} DW ?' ;")
+            code_section.append(" "*4 + f"MOV AX, {line[1][0]} ; MOVING OP1 INTO AX")
+            code_section.append(" "*4 + f"SUB AX, {line[1][2]} ; Substracting OP2 TO AX")
+            code_section.append(" "*4 + f"MOV {line[0]}, AX ; OP3 = AX")
+
+        if "-" in line[1]: #OP3 = OP1 / OP2
+            data_section.add(" "*4 + f"{line[1][0]} DW ?' ;")
+            data_section.add(" "*4 + f"{line[1][2]} DW ?' ;")
+            code_section.append(" "*4 + f"MOV AX, {line[1][0]} ; MOVING OP1 INTO AX")
+            code_section.append(" "*4 + f"XOR DX, DX ; Clear DX (necessary to ensure the upper 16 bits are zero)")
+            code_section.append(" "*4 + f"MOV BX, {line[1][2]} ; Move the divisor to BX")
+            code_section.append(" "*4 + f"DIV BX")
+            code_section.append(" "*4 + f"MOV {line[0]}, DX  ; Store the remainder in the 'remainder' variable")
+        
+        else:
+            data_section.add(" "*4 + f"{line[1][-1]} DW ?' ;")
+            code_section.append(" "*4 + f"MOV {line[0]}, {line[1][-1]}")
+
+    code_section.append("    MOV AH, 4CH        ; Exit program\nINT 21H\nMAIN ENDP")
+    print("\n".join([".DATA"]+list(data_section)+code_section))
+
 ln = input()
 while ln:
     out = gen_tac(ln.split(" "))
@@ -143,3 +207,7 @@ while ln:
             if c in table and c not in visited:
                 stack.append(c)
                 visited.add(c)
+    # print(table)
+    print("#"*10+"Assembly Code Start"+"#"*10)
+    gen_assembly(table, out)
+    print("#"*10+"Assembly Code End"+"#"*10)
